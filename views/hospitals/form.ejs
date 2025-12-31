@@ -1,0 +1,113 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-building"></i> <%= hospital ? 'Modifica' : 'Nuovo' %> Ospedale
+    </h1>
+
+    <% if (error) { %>
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> <%= error %>
+        </div>
+    <% } %>
+
+    <form method="POST" action="<%= hospital ? `/hospitals/update/${hospital.id}` : '/hospitals/create' %>">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Dati Generali</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Nome Ospedale *</label>
+                                <input type="text" name="nome" class="form-control" 
+                                       value="<%= hospital ? hospital.nome : '' %>" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Indirizzo</label>
+                                <input type="text" name="indirizzo" class="form-control" 
+                                       value="<%= hospital ? (hospital.indirizzo || '') : '' %>">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Città</label>
+                                <input type="text" name="citta" class="form-control" 
+                                       value="<%= hospital ? (hospital.citta || '') : '' %>">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Provincia</label>
+                                <input type="text" name="provincia" class="form-control" maxlength="2"
+                                       value="<%= hospital ? (hospital.provincia || '') : '' %>">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">CAP</label>
+                                <input type="text" name="cap" class="form-control" 
+                                       value="<%= hospital ? (hospital.cap || '') : '' %>">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Partita IVA</label>
+                                <input type="text" name="partita_iva" class="form-control" 
+                                       value="<%= hospital ? (hospital.partita_iva || '') : '' %>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Codice Fiscale</label>
+                                <input type="text" name="codice_fiscale" class="form-control" 
+                                       value="<%= hospital ? (hospital.codice_fiscale || '') : '' %>">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Contatti</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" name="telefono" class="form-control" 
+                                   value="<%= hospital ? (hospital.telefono || '') : '' %>">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" 
+                                   value="<%= hospital ? (hospital.email || '') : '' %>">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Referente</label>
+                            <input type="text" name="referente" class="form-control" 
+                                   value="<%= hospital ? (hospital.referente || '') : '' %>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <label class="form-label">Note</label>
+                        <textarea name="note" class="form-control" rows="4"><%= hospital ? (hospital.note || '') : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salva
+            </button>
+            <a href="/hospitals" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Annulla
+            </a>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

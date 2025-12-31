@@ -1,0 +1,171 @@
+<%- include('partials/header') %>
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+
+    <!-- Statistiche -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="text-muted">Preventivi Totali</h6>
+                    <h2 class="mb-0"><%= stats.quotes.totali %></h2>
+                    <small class="text-muted">
+                        <%= stats.quotes.approvati %> approvati
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="text-muted">Valore Approvati</h6>
+                    <h2 class="mb-0">€ <%= parseFloat(stats.quotes.valore_approvati).toFixed(2) %></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="text-muted">Commesse Attive</h6>
+                    <h2 class="mb-0"><%= parseInt(stats.workOrders.in_corso) + parseInt(stats.workOrders.da_iniziare) %></h2>
+                    <small class="text-muted">
+                        <%= stats.workOrders.in_corso %> in corso
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="text-muted">Ospedali Attivi</h6>
+                    <h2 class="mb-0"><%= stats.hospitals.totali %></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Preventivi recenti -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-text"></i> Preventivi Recenti
+                    </h5>
+                    <a href="/quotes/new" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus"></i> Nuovo
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Numero</th>
+                                    <th>Ospedale</th>
+                                    <th>Data</th>
+                                    <th>Totale</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (recentQuotes.length === 0) { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            Nessun preventivo presente
+                                        </td>
+                                    </tr>
+                                <% } else { %>
+                                    <% recentQuotes.forEach(q => { %>
+                                        <tr>
+                                            <td>
+                                                <a href="/quotes/view/<%= q.id %>"><%= q.numero_preventivo %></a>
+                                            </td>
+                                            <td><%= q.hospital_name %></td>
+                                            <td><%= new Date(q.data_preventivo).toLocaleDateString('it-IT') %></td>
+                                            <td>€ <%= parseFloat(q.totale_generale).toFixed(2) %></td>
+                                            <td>
+                                                <% if (q.stato === 'bozza') { %>
+                                                    <span class="badge bg-secondary">Bozza</span>
+                                                <% } else if (q.stato === 'inviato') { %>
+                                                    <span class="badge bg-info">Inviato</span>
+                                                <% } else if (q.stato === 'approvato') { %>
+                                                    <span class="badge bg-success">Approvato</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger">Rifiutato</span>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commesse attive -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-briefcase"></i> Commesse Attive
+                    </h5>
+                    <a href="/work-orders" class="btn btn-sm btn-success">
+                        <i class="bi bi-eye"></i> Vedi Tutte
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Numero</th>
+                                    <th>Ospedale</th>
+                                    <th>Data Apertura</th>
+                                    <th>Budget</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (activeWorkOrders.length === 0) { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            Nessuna commessa attiva
+                                        </td>
+                                    </tr>
+                                <% } else { %>
+                                    <% activeWorkOrders.forEach(w => { %>
+                                        <tr>
+                                            <td>
+                                                <a href="/work-orders/view/<%= w.id %>"><%= w.numero_commessa %></a>
+                                            </td>
+                                            <td><%= w.hospital_name %></td>
+                                            <td><%= new Date(w.data_apertura).toLocaleDateString('it-IT') %></td>
+                                            <td>€ <%= parseFloat(w.budget_previsto).toFixed(2) %></td>
+                                            <td>
+                                                <% if (w.stato === 'da_iniziare') { %>
+                                                    <span class="badge bg-warning">Da Iniziare</span>
+                                                <% } else if (w.stato === 'in_corso') { %>
+                                                    <span class="badge bg-primary">In Corso</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Completata</span>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

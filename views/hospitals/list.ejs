@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-building"></i> Ospedali</h1>
+        <a href="/hospitals/new" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuovo Ospedale
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>Città</th>
+                            <th>Telefono</th>
+                            <th>Email</th>
+                            <th>Referente</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (hospitals.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    Nessun ospedale presente
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% hospitals.forEach(h => { %>
+                                <tr>
+                                    <td><strong><%= h.nome %></strong></td>
+                                    <td><%= h.citta || '' %></td>
+                                    <td><%= h.telefono || '-' %></td>
+                                    <td><%= h.email || '-' %></td>
+                                    <td><%= h.referente || '-' %></td>
+                                    <td>
+                                        <a href="/hospitals/edit/<%= h.id %>" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="POST" action="/hospitals/delete/<%= h.id %>" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Sicuro di voler eliminare questo ospedale?')">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

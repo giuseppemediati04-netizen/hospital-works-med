@@ -1,0 +1,25 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: hospital-works-med-db
+    env: docker
+    plan: free
+    region: frankfurt
+    
+  # Web Service
+  - type: web
+    name: hospital-works-med
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hospital-works-med-db
+          property: connectionString

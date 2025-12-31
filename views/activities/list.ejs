@@ -1,0 +1,50 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-calendar-check"></i> Attività
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Commessa</th>
+                            <th>Ospedale</th>
+                            <th>Tecnico</th>
+                            <th>Descrizione</th>
+                            <th>Ore</th>
+                            <th>Totale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (activities.length === 0) { %>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Nessuna attività registrata
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% activities.forEach(a => { %>
+                                <tr>
+                                    <td><%= new Date(a.data_attivita).toLocaleDateString('it-IT') %></td>
+                                    <td><%= a.numero_commessa || '-' %></td>
+                                    <td><%= a.hospital_name %></td>
+                                    <td><%= a.tecnico_name || '-' %></td>
+                                    <td><%= a.descrizione.substring(0, 60) %><%= a.descrizione.length > 60 ? '...' : '' %></td>
+                                    <td><%= parseFloat(a.ore_lavoro).toFixed(2) %></td>
+                                    <td>€ <%= parseFloat(a.totale_manodopera).toFixed(2) %></td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

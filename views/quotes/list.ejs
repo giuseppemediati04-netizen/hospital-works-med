@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-file-earmark-text"></i> Preventivi</h1>
+        <a href="/quotes/new" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuovo Preventivo
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Numero</th>
+                            <th>Ospedale</th>
+                            <th>Descrizione</th>
+                            <th>Data</th>
+                            <th>Totale</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (quotes.length === 0) { %>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Nessun preventivo presente
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% quotes.forEach(q => { %>
+                                <tr>
+                                    <td><strong><%= q.numero_preventivo %></strong></td>
+                                    <td><%= q.hospital_name %></td>
+                                    <td><%= q.descrizione.substring(0, 50) %><%= q.descrizione.length > 50 ? '...' : '' %></td>
+                                    <td><%= new Date(q.data_preventivo).toLocaleDateString('it-IT') %></td>
+                                    <td><strong>€ <%= parseFloat(q.totale_generale).toFixed(2) %></strong></td>
+                                    <td>
+                                        <% if (q.stato === 'bozza') { %>
+                                            <span class="badge bg-secondary">Bozza</span>
+                                        <% } else if (q.stato === 'inviato') { %>
+                                            <span class="badge bg-info">Inviato</span>
+                                        <% } else if (q.stato === 'approvato') { %>
+                                            <span class="badge bg-success">Approvato</span>
+                                        <% } else { %>
+                                            <span class="badge bg-danger">Rifiutato</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <a href="/quotes/view/<%= q.id %>" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

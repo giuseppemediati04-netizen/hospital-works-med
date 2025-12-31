@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-receipt"></i> Fatture
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Numero</th>
+                            <th>Commessa</th>
+                            <th>Ospedale</th>
+                            <th>Data Fattura</th>
+                            <th>Scadenza</th>
+                            <th>Importo</th>
+                            <th>Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (invoices.length === 0) { %>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Nessuna fattura presente
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% invoices.forEach(i => { %>
+                                <tr>
+                                    <td><strong><%= i.numero_fattura %></strong></td>
+                                    <td><%= i.numero_commessa || '-' %></td>
+                                    <td><%= i.hospital_name %></td>
+                                    <td><%= new Date(i.data_fattura).toLocaleDateString('it-IT') %></td>
+                                    <td><%= i.data_scadenza ? new Date(i.data_scadenza).toLocaleDateString('it-IT') : '-' %></td>
+                                    <td><strong>€ <%= parseFloat(i.totale_fattura).toFixed(2) %></strong></td>
+                                    <td>
+                                        <% if (i.stato === 'emessa') { %>
+                                            <span class="badge bg-warning text-dark">Emessa</span>
+                                        <% } else if (i.stato === 'pagata') { %>
+                                            <span class="badge bg-success">Pagata</span>
+                                        <% } else { %>
+                                            <span class="badge bg-danger">Scaduta</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

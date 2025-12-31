@@ -1,0 +1,243 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-briefcase"></i> Commessa <%= workOrder.numero_commessa %></h1>
+        <a href="/work-orders" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Torna alla Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Intestazione -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">COMMESSA</h5>
+                            <h3><%= workOrder.numero_commessa %></h3>
+                            <p class="mb-1">
+                                <strong>Preventivo:</strong> <%= workOrder.numero_preventivo || 'N/D' %>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Apertura:</strong> <%= new Date(workOrder.data_apertura).toLocaleDateString('it-IT') %>
+                            </p>
+                            <% if (workOrder.data_chiusura) { %>
+                                <p class="mb-1">
+                                    <strong>Chiusura:</strong> <%= new Date(workOrder.data_chiusura).toLocaleDateString('it-IT') %>
+                                </p>
+                            <% } %>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5>CLIENTE</h5>
+                            <p class="mb-1"><strong><%= workOrder.hospital_name %></strong></p>
+                            <% if (workOrder.indirizzo) { %>
+                                <p class="mb-1"><%= workOrder.indirizzo %></p>
+                            <% } %>
+                            <% if (workOrder.citta) { %>
+                                <p class="mb-1"><%= workOrder.citta %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                    <hr>
+                    <div>
+                        <strong>Descrizione:</strong>
+                        <p class="mb-0"><%= workOrder.descrizione %></p>
+                    </div>
+                    <% if (workOrder.note) { %>
+                        <div class="mt-2">
+                            <strong>Note:</strong>
+                            <p class="mb-0"><%= workOrder.note %></p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Riepilogo Economico -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Riepilogo Economico</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Budget Previsto:</strong></td>
+                                    <td class="text-end">€ <%= parseFloat(workOrder.budget_previsto).toFixed(2) %></td>
+                                </tr>
+                                <tr>
+                                    <td>Manodopera:</td>
+                                    <td class="text-end">€ <%= totals.manodopera.toFixed(2) %></td>
+                                </tr>
+                                <tr>
+                                    <td>Materiali:</td>
+                                    <td class="text-end">€ <%= totals.materiali.toFixed(2) %></td>
+                                </tr>
+                                <tr>
+                                    <td>Trasferte:</td>
+                                    <td class="text-end">€ <%= totals.trasferte.toFixed(2) %></td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td><strong>Totale Speso:</strong></td>
+                                    <td class="text-end"><strong>€ <%= totals.totale.toFixed(2) %></strong></td>
+                                </tr>
+                                <tr class="<%= workOrder.scostamento > 0 ? 'table-danger' : workOrder.scostamento < 0 ? 'table-success' : '' %>">
+                                    <td><strong>Scostamento:</strong></td>
+                                    <td class="text-end">
+                                        <strong>
+                                            <%= workOrder.scostamento > 0 ? '+' : '' %>€ <%= parseFloat(workOrder.scostamento).toFixed(2) %>
+                                            (<%= workOrder.budget_previsto > 0 ? ((workOrder.scostamento / workOrder.budget_previsto) * 100).toFixed(1) : 0 %>%)
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attività -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Attività Registrate</h5>
+                </div>
+                <div class="card-body">
+                    <% if (activities.length === 0) { %>
+                        <p class="text-muted text-center py-3">Nessuna attività registrata</p>
+                    <% } else { %>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tecnico</th>
+                                        <th>Descrizione</th>
+                                        <th>Ore</th>
+                                        <th>Totale</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% activities.forEach(a => { %>
+                                        <tr>
+                                            <td><%= new Date(a.data_attivita).toLocaleDateString('it-IT') %></td>
+                                            <td><%= a.tecnico_name %></td>
+                                            <td><%= a.descrizione %></td>
+                                            <td><%= parseFloat(a.ore_lavoro).toFixed(2) %></td>
+                                            <td>€ <%= parseFloat(a.totale_manodopera).toFixed(2) %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Stato -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Stato Commessa</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <% if (workOrder.stato === 'da_iniziare') { %>
+                            <h3><span class="badge bg-warning text-dark">Da Iniziare</span></h3>
+                        <% } else if (workOrder.stato === 'in_corso') { %>
+                            <h3><span class="badge bg-primary">In Corso</span></h3>
+                        <% } else if (workOrder.stato === 'completata') { %>
+                            <h3><span class="badge bg-success">Completata</span></h3>
+                        <% } else { %>
+                            <h3><span class="badge bg-info">Fatturata</span></h3>
+                        <% } %>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <% if (workOrder.stato === 'da_iniziare') { %>
+                            <button onclick="changeWorkOrderStatus(<%= workOrder.id %>, 'in_corso')" 
+                                    class="btn btn-primary">
+                                <i class="bi bi-play-circle"></i> Inizia Lavori
+                            </button>
+                        <% } %>
+                        
+                        <% if (workOrder.stato === 'in_corso') { %>
+                            <button onclick="changeWorkOrderStatus(<%= workOrder.id %>, 'completata')" 
+                                    class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Completa
+                            </button>
+                        <% } %>
+                        
+                        <% if (workOrder.stato === 'completata') { %>
+                            <button onclick="alert('Funzione fatturazione in sviluppo')" 
+                                    class="btn btn-info">
+                                <i class="bi bi-receipt"></i> Genera Fattura
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progressione -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Avanzamento</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Completamento</span>
+                            <span><%= workOrder.percentuale_completamento || 0 %>%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: <%= workOrder.percentuale_completamento || 0 %>%"
+                                 aria-valuenow="<%= workOrder.percentuale_completamento || 0 %>" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <% const utilizzo = workOrder.budget_previsto > 0 ? (totals.totale / workOrder.budget_previsto * 100) : 0; %>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Budget Utilizzato</span>
+                            <span><%= utilizzo.toFixed(1) %>%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar <%= utilizzo > 100 ? 'bg-danger' : utilizzo > 80 ? 'bg-warning' : 'bg-success' %>" 
+                                 role="progressbar" style="width: <%= Math.min(utilizzo, 100) %>%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info aggiuntive -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informazioni</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1 small">
+                        <strong>Creato da:</strong> <%= workOrder.created_by_name %>
+                    </p>
+                    <p class="mb-1 small">
+                        <strong>Creato:</strong><br>
+                        <%= new Date(workOrder.created_at).toLocaleString('it-IT') %>
+                    </p>
+                    <p class="mb-0 small">
+                        <strong>Ultimo aggiornamento:</strong><br>
+                        <%= new Date(workOrder.updated_at).toLocaleString('it-IT') %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

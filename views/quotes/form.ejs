@@ -1,0 +1,192 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-file-earmark-text"></i> Nuovo Preventivo
+    </h1>
+
+    <form method="POST" action="/quotes/create" id="quoteForm">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Dati Preventivo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Ospedale *</label>
+                            <select name="hospital_id" class="form-select" required>
+                                <option value="">Seleziona ospedale...</option>
+                                <% hospitals.forEach(h => { %>
+                                    <option value="<%= h.id %>"><%= h.nome %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrizione Lavori *</label>
+                            <textarea name="descrizione" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea name="note" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voci Preventivo -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Voci Preventivo</h5>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addItem()">
+                            <i class="bi bi-plus"></i> Aggiungi Voce
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 150px">Tipologia</th>
+                                        <th>Descrizione</th>
+                                        <th style="width: 100px">Quantità</th>
+                                        <th style="width: 120px">Prezzo €</th>
+                                        <th style="width: 120px">Totale €</th>
+                                        <th style="width: 60px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody">
+                                    <!-- Le righe vengono aggiunte dinamicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Riepilogo Totali</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="quote-totals">
+                            <div class="total-row">
+                                <span>Manodopera:</span>
+                                <span id="totalManodopera">€ 0.00</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Materiali:</span>
+                                <span id="totalMateriali">€ 0.00</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Trasferte:</span>
+                                <span id="totalTrasferte">€ 0.00</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>TOTALE GENERALE:</span>
+                                <span id="totalGenerale">€ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-save"></i> Salva Preventivo
+                        </button>
+                        <a href="/quotes" class="btn btn-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Annulla
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let itemCounter = 0;
+
+function addItem() {
+    const tbody = document.getElementById('itemsBody');
+    const row = document.createElement('tr');
+    row.id = `item-${itemCounter}`;
+    
+    row.innerHTML = `
+        <td>
+            <select name="items[${itemCounter}][tipologia]" class="form-select form-select-sm" required>
+                <option value="manodopera">Manodopera</option>
+                <option value="materiale">Materiale</option>
+                <option value="trasferta">Trasferta</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="items[${itemCounter}][descrizione]" class="form-control form-control-sm" required>
+        </td>
+        <td>
+            <input type="number" name="items[${itemCounter}][quantita]" class="form-control form-control-sm" 
+                   value="1" step="0.01" min="0" onchange="calculateItemTotal(${itemCounter})" required>
+        </td>
+        <td>
+            <input type="number" name="items[${itemCounter}][prezzo_unitario]" class="form-control form-control-sm" 
+                   value="0" step="0.01" min="0" onchange="calculateItemTotal(${itemCounter})" required>
+        </td>
+        <td>
+            <input type="number" name="items[${itemCounter}][totale]" class="form-control form-control-sm" 
+                   value="0" step="0.01" readonly id="itemTotal-${itemCounter}">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${itemCounter})">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+    itemCounter++;
+}
+
+function removeItem(id) {
+    document.getElementById(`item-${id}`).remove();
+    calculateTotals();
+}
+
+function calculateItemTotal(id) {
+    const qta = parseFloat(document.querySelector(`input[name="items[${id}][quantita]"]`).value) || 0;
+    const prezzo = parseFloat(document.querySelector(`input[name="items[${id}][prezzo_unitario]"]`).value) || 0;
+    const totale = qta * prezzo;
+    
+    document.getElementById(`itemTotal-${id}`).value = totale.toFixed(2);
+    document.querySelector(`input[name="items[${id}][totale]"]`).value = totale.toFixed(2);
+    
+    calculateTotals();
+}
+
+function calculateTotals() {
+    let manodopera = 0, materiali = 0, trasferte = 0;
+    
+    document.querySelectorAll('#itemsBody tr').forEach(row => {
+        const tipologia = row.querySelector('select[name*="[tipologia]"]').value;
+        const totale = parseFloat(row.querySelector('input[name*="[totale]"]').value) || 0;
+        
+        if (tipologia === 'manodopera') manodopera += totale;
+        else if (tipologia === 'materiale') materiali += totale;
+        else if (tipologia === 'trasferta') trasferte += totale;
+    });
+    
+    const totaleGenerale = manodopera + materiali + trasferte;
+    
+    document.getElementById('totalManodopera').textContent = `€ ${manodopera.toFixed(2)}`;
+    document.getElementById('totalMateriali').textContent = `€ ${materiali.toFixed(2)}`;
+    document.getElementById('totalTrasferte').textContent = `€ ${trasferte.toFixed(2)}`;
+    document.getElementById('totalGenerale').textContent = `€ ${totaleGenerale.toFixed(2)}`;
+}
+
+// Aggiungi una riga di default
+window.addEventListener('DOMContentLoaded', () => {
+    addItem();
+});
+</script>
+
+<%- include('../partials/footer') %>

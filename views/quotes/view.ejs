@@ -1,0 +1,197 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <h1><i class="bi bi-file-earmark-text"></i> Preventivo <%= quote.numero_preventivo %></h1>
+        <div>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="bi bi-printer"></i> Stampa
+            </button>
+            <a href="/quotes" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Torna alla Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Intestazione -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">PREVENTIVO</h5>
+                            <h3><%= quote.numero_preventivo %></h3>
+                            <p class="mb-1">
+                                <strong>Data:</strong> <%= new Date(quote.data_preventivo).toLocaleDateString('it-IT') %>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Creato da:</strong> <%= quote.created_by_name %>
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5>CLIENTE</h5>
+                            <p class="mb-1"><strong><%= quote.hospital_name %></strong></p>
+                            <% if (quote.indirizzo) { %>
+                                <p class="mb-1"><%= quote.indirizzo %></p>
+                            <% } %>
+                            <% if (quote.citta) { %>
+                                <p class="mb-1"><%= quote.citta %></p>
+                            <% } %>
+                            <% if (quote.partita_iva) { %>
+                                <p class="mb-1">P.IVA: <%= quote.partita_iva %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                    <hr>
+                    <div>
+                        <strong>Descrizione:</strong>
+                        <p class="mb-0"><%= quote.descrizione %></p>
+                    </div>
+                    <% if (quote.note) { %>
+                        <div class="mt-2">
+                            <strong>Note:</strong>
+                            <p class="mb-0"><%= quote.note %></p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Voci preventivo -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Dettaglio Voci</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tipologia</th>
+                                    <th>Descrizione</th>
+                                    <th class="text-center">Quantità</th>
+                                    <th class="text-end">Prezzo Unit.</th>
+                                    <th class="text-end">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% items.forEach(item => { %>
+                                    <tr>
+                                        <td>
+                                            <% if (item.tipologia === 'manodopera') { %>
+                                                <span class="badge bg-primary">Manodopera</span>
+                                            <% } else if (item.tipologia === 'materiale') { %>
+                                                <span class="badge bg-success">Materiale</span>
+                                            <% } else { %>
+                                                <span class="badge bg-info">Trasferta</span>
+                                            <% } %>
+                                        </td>
+                                        <td><%= item.descrizione %></td>
+                                        <td class="text-center"><%= parseFloat(item.quantita).toFixed(2) %></td>
+                                        <td class="text-end">€ <%= parseFloat(item.prezzo_unitario).toFixed(2) %></td>
+                                        <td class="text-end"><strong>€ <%= parseFloat(item.totale).toFixed(2) %></strong></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Totale Manodopera:</strong></td>
+                                    <td class="text-end"><strong>€ <%= parseFloat(quote.totale_manodopera).toFixed(2) %></strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Totale Materiali:</strong></td>
+                                    <td class="text-end"><strong>€ <%= parseFloat(quote.totale_materiali).toFixed(2) %></strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Totale Trasferte:</strong></td>
+                                    <td class="text-end"><strong>€ <%= parseFloat(quote.totale_trasferte).toFixed(2) %></strong></td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td colspan="4" class="text-end"><h5 class="mb-0">TOTALE GENERALE:</h5></td>
+                                    <td class="text-end"><h5 class="mb-0 text-success">€ <%= parseFloat(quote.totale_generale).toFixed(2) %></h5></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Stato -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Stato Preventivo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <% if (quote.stato === 'bozza') { %>
+                            <h3><span class="badge bg-secondary">Bozza</span></h3>
+                        <% } else if (quote.stato === 'inviato') { %>
+                            <h3><span class="badge bg-info">Inviato</span></h3>
+                        <% } else if (quote.stato === 'approvato') { %>
+                            <h3><span class="badge bg-success">Approvato</span></h3>
+                        <% } else { %>
+                            <h3><span class="badge bg-danger">Rifiutato</span></h3>
+                        <% } %>
+                    </div>
+
+                    <% if (quote.data_invio) { %>
+                        <p class="mb-1"><small><strong>Inviato:</strong> <%= new Date(quote.data_invio).toLocaleDateString('it-IT') %></small></p>
+                    <% } %>
+                    <% if (quote.data_approvazione) { %>
+                        <p class="mb-1"><small><strong>Approvato:</strong> <%= new Date(quote.data_approvazione).toLocaleDateString('it-IT') %></small></p>
+                    <% } %>
+
+                    <hr>
+
+                    <div class="d-grid gap-2 no-print">
+                        <% if (quote.stato === 'bozza') { %>
+                            <button onclick="changeQuoteStatus(<%= quote.id %>, 'inviato')" 
+                                    class="btn btn-info">
+                                <i class="bi bi-send"></i> Segna come Inviato
+                            </button>
+                        <% } %>
+                        
+                        <% if (quote.stato === 'inviato') { %>
+                            <button onclick="changeQuoteStatus(<%= quote.id %>, 'approvato')" 
+                                    class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Approva
+                            </button>
+                            <button onclick="changeQuoteStatus(<%= quote.id %>, 'rifiutato')" 
+                                    class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Rifiuta
+                            </button>
+                        <% } %>
+                        
+                        <% if (quote.stato === 'approvato') { %>
+                            <button onclick="convertToWorkOrder(<%= quote.id %>)" 
+                                    class="btn btn-primary">
+                                <i class="bi bi-briefcase"></i> Crea Commessa
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info aggiuntive -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informazioni</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1 small">
+                        <strong>Creato:</strong><br>
+                        <%= new Date(quote.created_at).toLocaleString('it-IT') %>
+                    </p>
+                    <p class="mb-0 small">
+                        <strong>Ultimo aggiornamento:</strong><br>
+                        <%= new Date(quote.updated_at).toLocaleString('it-IT') %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
