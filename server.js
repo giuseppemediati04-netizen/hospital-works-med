@@ -52,13 +52,17 @@ app.use('/work-orders', requireAuth, workOrdersRoutes);
 app.use('/activities', requireAuth, activitiesRoutes);
 app.use('/invoices', requireAuth, invoicesRoutes);
 
-// Home redirect
+// Home redirect - Login disabilitato, accesso diretto
 app.get('/', (req, res) => {
-  if (req.session.userId) {
-    res.redirect('/dashboard');
-  } else {
-    res.redirect('/login');
-  }
+  req.session.userId = 1;
+  req.session.username = 'admin';
+  req.session.nome = 'Amministratore';
+  req.session.ruolo = 'admin';
+  res.redirect('/dashboard');
+});
+
+app.get('/login', (req, res) => {
+  res.redirect('/dashboard');
 });
 
 // Error handler
