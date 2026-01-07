@@ -176,14 +176,29 @@ const createTables = async () => {
         hospital_id INTEGER REFERENCES hospitals(id) NOT NULL,
         data_fattura DATE DEFAULT CURRENT_DATE,
         data_scadenza DATE,
-        importo_netto DECIMAL(10,2) NOT NULL,
-        iva DECIMAL(10,2) DEFAULT 22,
-        importo_iva DECIMAL(10,2),
-        totale_fattura DECIMAL(10,2) NOT NULL,
+        imponibile DECIMAL(10,2) DEFAULT 0,
+        iva DECIMAL(10,2) DEFAULT 0,
+        totale_fattura DECIMAL(10,2) DEFAULT 0,
         stato VARCHAR(20) DEFAULT 'emessa',
         data_pagamento DATE,
         note TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Tabella Voci Fattura
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS invoice_items (
+        id SERIAL PRIMARY KEY,
+        invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
+        tipologia VARCHAR(20) NOT NULL,
+        descrizione TEXT NOT NULL,
+        quantita DECIMAL(10,2) DEFAULT 1,
+        prezzo_unitario DECIMAL(10,2) NOT NULL,
+        totale DECIMAL(10,2) NOT NULL,
+        ordinamento INTEGER DEFAULT 0
       )
     `);
 
