@@ -1,0 +1,239 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-receipt"></i> Fattura <%= invoice.numero_fattura %></h1>
+        <div>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="bi bi-printer"></i> Stampa
+            </button>
+            <a href="/invoices" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Torna alla Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body" id="invoice-content">
+            <!-- Intestazione Fattura -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h2 class="text-primary">FATTURA</h2>
+                    <h4><%= invoice.numero_fattura %></h4>
+                    <p class="mb-0">
+                        <strong>Data:</strong> <%= new Date(invoice.data_fattura).toLocaleDateString('it-IT') %>
+                    </p>
+                    <% if (invoice.data_scadenza) { %>
+                        <p class="mb-0">
+                            <strong>Scadenza:</strong> <%= new Date(invoice.data_scadenza).toLocaleDateString('it-IT') %>
+                        </p>
+                    <% } %>
+                    <% if (invoice.numero_commessa) { %>
+                        <p class="mb-0">
+                            <strong>Commessa:</strong> 
+                            <a href="/work-orders/view/<%= invoice.work_order_id %>"><%= invoice.numero_commessa %></a>
+                        </p>
+                    <% } %>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>FORNITORE</h5>
+                    <p class="mb-0"><strong>Giuseppe Mediati</strong></p>
+                    <p class="mb-0">Servizi Manutenzione Ospedaliera</p>
+                    <p class="mb-0">Via [Indirizzo]</p>
+                    <p class="mb-0">[CAP] [Città]</p>
+                    <p class="mb-0">P.IVA: [Partita IVA]</p>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Cliente -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="text-primary">CLIENTE</h5>
+                    <p class="mb-0"><strong><%= invoice.hospital_name %></strong></p>
+                    <% if (invoice.indirizzo) { %>
+                        <p class="mb-0"><%= invoice.indirizzo %></p>
+                    <% } %>
+                    <% if (invoice.citta || invoice.cap) { %>
+                        <p class="mb-0"><%= invoice.cap %> <%= invoice.citta %></p>
+                    <% } %>
+                    <% if (invoice.partita_iva) { %>
+                        <p class="mb-0">P.IVA: <%= invoice.partita_iva %></p>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if (invoice.commessa_descrizione) { %>
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <p class="mb-0"><strong>Descrizione Lavori:</strong></p>
+                        <p class="mb-0"><%= invoice.commessa_descrizione %></p>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Voci Fattura -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60%">Descrizione</th>
+                            <th class="text-center" style="width: 10%">Qta</th>
+                            <th class="text-end" style="width: 15%">Prezzo Unit.</th>
+                            <th class="text-end" style="width: 15%">Totale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% 
+                        const manodopera = items.filter(i => i.tipologia === 'manodopera');
+                        const materiali = items.filter(i => i.tipologia === 'materiale');
+                        const trasferte = items.filter(i => i.tipologia === 'trasferta');
+                        %>
+
+                        <!-- Manodopera -->
+                        <% if (manodopera.length > 0) { %>
+                            <tr class="table-info">
+                                <td colspan="4"><strong>MANODOPERA</strong></td>
+                            </tr>
+                            <% manodopera.forEach(item => { %>
+                                <tr>
+                                    <td><%= item.descrizione %></td>
+                                    <td class="text-center"><%= parseFloat(item.quantita).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.prezzo_unitario).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.totale).toFixed(2) %></td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+
+                        <!-- Materiali -->
+                        <% if (materiali.length > 0) { %>
+                            <tr class="table-info">
+                                <td colspan="4"><strong>MATERIALI</strong></td>
+                            </tr>
+                            <% materiali.forEach(item => { %>
+                                <tr>
+                                    <td><%= item.descrizione %></td>
+                                    <td class="text-center"><%= parseFloat(item.quantita).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.prezzo_unitario).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.totale).toFixed(2) %></td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+
+                        <!-- Trasferte -->
+                        <% if (trasferte.length > 0) { %>
+                            <tr class="table-info">
+                                <td colspan="4"><strong>TRASFERTE</strong></td>
+                            </tr>
+                            <% trasferte.forEach(item => { %>
+                                <tr>
+                                    <td><%= item.descrizione %></td>
+                                    <td class="text-center"><%= parseFloat(item.quantita).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.prezzo_unitario).toFixed(2) %></td>
+                                    <td class="text-end">€ <%= parseFloat(item.totale).toFixed(2) %></td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totali -->
+            <div class="row">
+                <div class="col-md-7"></div>
+                <div class="col-md-5">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <td><strong>Imponibile:</strong></td>
+                                <td class="text-end">€ <%= parseFloat(invoice.imponibile).toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>IVA 22%:</strong></td>
+                                <td class="text-end">€ <%= parseFloat(invoice.iva).toFixed(2) %></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>TOTALE FATTURA:</strong></td>
+                                <td class="text-end"><strong>€ <%= parseFloat(invoice.totale_fattura).toFixed(2) %></strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Stato -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <p class="mb-0">
+                        <strong>Stato:</strong> 
+                        <% if (invoice.stato === 'emessa') { %>
+                            <span class="badge bg-warning text-dark">Emessa</span>
+                        <% } else if (invoice.stato === 'pagata') { %>
+                            <span class="badge bg-success">Pagata</span>
+                        <% } else { %>
+                            <span class="badge bg-danger">Scaduta</span>
+                        <% } %>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <p class="small text-muted mb-0">
+                        Pagamento da effettuarsi entro <%= new Date(invoice.data_scadenza).toLocaleDateString('it-IT') %><br>
+                        Modalità di pagamento: Bonifico bancario<br>
+                        IBAN: [Inserire IBAN]
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Azioni -->
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="mb-3">Azioni</h5>
+            <div class="btn-group" role="group">
+                <% if (invoice.stato === 'emessa') { %>
+                    <button onclick="changeInvoiceStatus(<%= invoice.id %>, 'pagata')" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Segna come Pagata
+                    </button>
+                <% } %>
+                <% if (invoice.stato === 'pagata') { %>
+                    <button onclick="changeInvoiceStatus(<%= invoice.id %>, 'emessa')" class="btn btn-warning">
+                        <i class="bi bi-arrow-counterclockwise"></i> Riporta a Emessa
+                    </button>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function changeInvoiceStatus(id, stato) {
+    if (!confirm('Sei sicuro di voler cambiare lo stato della fattura?')) return;
+    
+    fetch(`/invoices/status/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stato })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Errore cambio stato');
+        }
+    });
+}
+</script>
+
+<style media="print">
+    .btn, .card:last-child { display: none; }
+    @page { margin: 2cm; }
+</style>
+
+<%- include('../partials/footer') %>

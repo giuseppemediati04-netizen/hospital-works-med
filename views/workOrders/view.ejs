@@ -316,10 +316,12 @@
                         <% } %>
                         
                         <% if (workOrder.stato === 'completata') { %>
-                            <button onclick="alert('Funzione fatturazione in sviluppo')" 
-                                    class="btn btn-info">
-                                <i class="bi bi-receipt"></i> Genera Fattura
-                            </button>
+                            <form method="POST" action="/invoices/generate-from-work-order/<%= workOrder.id %>">
+                                <button type="submit" class="btn btn-info w-100"
+                                        onclick="return confirm('Generare la fattura per questa commessa?')">
+                                    <i class="bi bi-receipt"></i> Genera Fattura
+                                </button>
+                            </form>
                         <% } %>
                     </div>
                 </div>
