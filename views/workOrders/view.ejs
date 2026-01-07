@@ -98,7 +98,142 @@
                 </div>
             </div>
 
-            <!-- Attività -->
+            <!-- Form Aggiungi Attività -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Aggiungi Nuova Attività
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/work-orders/add-activity/<%= workOrder.id %>" id="activityForm">
+                        <!-- Dati Attività -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Data Intervento *</label>
+                                <input type="date" name="data_attivita" class="form-control" 
+                                       value="<%= new Date().toISOString().split('T')[0] %>" required>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Descrizione Lavoro *</label>
+                                <input type="text" name="descrizione" class="form-control" 
+                                       placeholder="es. Manutenzione cappe laboratorio" required>
+                            </div>
+                        </div>
+
+                        <!-- Manodopera -->
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Ore Lavorate *</label>
+                                <input type="number" name="ore_lavoro" class="form-control" 
+                                       step="0.25" min="0" value="0" 
+                                       onchange="calculateManodopera()" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Costo Orario € *</label>
+                                <input type="number" name="costo_orario" class="form-control" 
+                                       step="0.01" min="0" value="0" 
+                                       onchange="calculateManodopera()" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Totale Manodopera €</label>
+                                <input type="number" name="totale_manodopera" class="form-control" 
+                                       step="0.01" readonly id="totaleManodopera" value="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Tipo Intervento</label>
+                                <input type="text" name="tipo_intervento" class="form-control" 
+                                       placeholder="es. Ordinaria">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Materiali -->
+                        <h6 class="mb-3">Materiali Utilizzati (opzionale)</h6>
+                        <div id="materialsSection">
+                            <div class="row mb-2">
+                                <div class="col-md-5">
+                                    <input type="text" name="materiali[0][descrizione]" class="form-control form-control-sm" 
+                                           placeholder="Descrizione materiale">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" name="materiali[0][quantita]" class="form-control form-control-sm" 
+                                           placeholder="Qta" step="0.01" min="0" value="1">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" name="materiali[0][prezzo_unitario]" class="form-control form-control-sm" 
+                                           placeholder="Prezzo €" step="0.01" min="0">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" name="materiali[0][totale]" class="form-control form-control-sm" 
+                                           placeholder="Totale €" readonly>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-sm btn-success w-100" onclick="addMaterial()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Trasferta -->
+                        <h6 class="mb-3">Trasferta (opzionale)</h6>
+                        <div class="row">
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Km Percorsi</label>
+                                <input type="number" name="km_percorsi" class="form-control form-control-sm" 
+                                       step="0.1" min="0" onchange="calculateTrasferta()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Costo/Km €</label>
+                                <input type="number" name="costo_km" class="form-control form-control-sm" 
+                                       step="0.01" min="0" value="0.50" onchange="calculateTrasferta()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Pedaggi €</label>
+                                <input type="number" name="pedaggi" class="form-control form-control-sm" 
+                                       step="0.01" min="0" value="0" onchange="calculateTrasferta()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Vitto €</label>
+                                <input type="number" name="vitto" class="form-control form-control-sm" 
+                                       step="0.01" min="0" value="0" onchange="calculateTrasferta()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Alloggio €</label>
+                                <input type="number" name="alloggio" class="form-control form-control-sm" 
+                                       step="0.01" min="0" value="0" onchange="calculateTrasferta()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label class="form-label small">Totale Trasferta €</label>
+                                <input type="number" name="totale_trasferta" class="form-control form-control-sm" 
+                                       readonly id="totaleTrasferta" value="0">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small">Note Trasferta</label>
+                            <input type="text" name="note_trasferta" class="form-control form-control-sm" 
+                                   placeholder="Note aggiuntive">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Note Attività</label>
+                            <textarea name="note" class="form-control" rows="2" 
+                                      placeholder="Note aggiuntive sull'intervento"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Salva Attività
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attività Registrate -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Attività Registrate</h5>
@@ -108,24 +243,32 @@
                         <p class="text-muted text-center py-3">Nessuna attività registrata</p>
                     <% } else { %>
                         <div class="table-responsive">
-                            <table class="table table-sm">
+                            <table class="table table-sm table-hover">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Data</th>
                                         <th>Tecnico</th>
                                         <th>Descrizione</th>
                                         <th>Ore</th>
-                                        <th>Totale</th>
+                                        <th class="text-end">Totale</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <% activities.forEach(a => { %>
                                         <tr>
                                             <td><%= new Date(a.data_attivita).toLocaleDateString('it-IT') %></td>
-                                            <td><%= a.tecnico_name %></td>
+                                            <td><%= a.tecnico_name || 'N/D' %></td>
                                             <td><%= a.descrizione %></td>
-                                            <td><%= parseFloat(a.ore_lavoro).toFixed(2) %></td>
-                                            <td>€ <%= parseFloat(a.totale_manodopera).toFixed(2) %></td>
+                                            <td><%= parseFloat(a.ore_lavoro).toFixed(2) %>h</td>
+                                            <td class="text-end"><strong>€ <%= parseFloat(a.totale_manodopera).toFixed(2) %></strong></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" 
+                                                        onclick="deleteActivity(<%= a.id %>)"
+                                                        title="Elimina">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     <% }) %>
                                 </tbody>
@@ -239,5 +382,92 @@
         </div>
     </div>
 </div>
+
+<script>
+let materialCounter = 1;
+
+function calculateManodopera() {
+    const ore = parseFloat(document.querySelector('input[name="ore_lavoro"]').value) || 0;
+    const costo = parseFloat(document.querySelector('input[name="costo_orario"]').value) || 0;
+    const totale = ore * costo;
+    document.getElementById('totaleManodopera').value = totale.toFixed(2);
+}
+
+function calculateTrasferta() {
+    const km = parseFloat(document.querySelector('input[name="km_percorsi"]').value) || 0;
+    const costoKm = parseFloat(document.querySelector('input[name="costo_km"]').value) || 0;
+    const pedaggi = parseFloat(document.querySelector('input[name="pedaggi"]').value) || 0;
+    const vitto = parseFloat(document.querySelector('input[name="vitto"]').value) || 0;
+    const alloggio = parseFloat(document.querySelector('input[name="alloggio"]').value) || 0;
+    
+    const totale = (km * costoKm) + pedaggi + vitto + alloggio;
+    document.getElementById('totaleTrasferta').value = totale.toFixed(2);
+}
+
+function addMaterial() {
+    const section = document.getElementById('materialsSection');
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-2';
+    newRow.innerHTML = `
+        <div class="col-md-5">
+            <input type="text" name="materiali[${materialCounter}][descrizione]" class="form-control form-control-sm" 
+                   placeholder="Descrizione materiale">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="materiali[${materialCounter}][quantita]" class="form-control form-control-sm" 
+                   placeholder="Qta" step="0.01" min="0" value="1" onchange="calculateMaterial(${materialCounter})">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="materiali[${materialCounter}][prezzo_unitario]" class="form-control form-control-sm" 
+                   placeholder="Prezzo €" step="0.01" min="0" onchange="calculateMaterial(${materialCounter})">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="materiali[${materialCounter}][totale]" class="form-control form-control-sm" 
+                   placeholder="Totale €" readonly id="materialTotal${materialCounter}">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-sm btn-danger w-100" onclick="this.parentElement.parentElement.remove()">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    `;
+    section.appendChild(newRow);
+    materialCounter++;
+}
+
+function calculateMaterial(id) {
+    const qta = parseFloat(document.querySelector(`input[name="materiali[${id}][quantita]"]`).value) || 0;
+    const prezzo = parseFloat(document.querySelector(`input[name="materiali[${id}][prezzo_unitario]"]`).value) || 0;
+    const totale = qta * prezzo;
+    document.getElementById(`materialTotal${id}`).value = totale.toFixed(2);
+    document.querySelector(`input[name="materiali[${id}][totale]"]`).value = totale.toFixed(2);
+}
+
+// Calcola anche il primo materiale
+document.querySelector('input[name="materiali[0][quantita]"]').onchange = function() {
+    const qta = parseFloat(this.value) || 0;
+    const prezzo = parseFloat(document.querySelector('input[name="materiali[0][prezzo_unitario]"]').value) || 0;
+    document.querySelector('input[name="materiali[0][totale]"]').value = (qta * prezzo).toFixed(2);
+};
+document.querySelector('input[name="materiali[0][prezzo_unitario]"]').onchange = function() {
+    const qta = parseFloat(document.querySelector('input[name="materiali[0][quantita]"]').value) || 0;
+    const prezzo = parseFloat(this.value) || 0;
+    document.querySelector('input[name="materiali[0][totale]"]').value = (qta * prezzo).toFixed(2);
+};
+
+function deleteActivity(id) {
+    if (!confirm('Sei sicuro di voler eliminare questa attività?')) return;
+    
+    fetch(`/work-orders/delete-activity/${id}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Errore nell\'eliminazione');
+        }
+    });
+}
+</script>
 
 <%- include('../partials/footer') %>

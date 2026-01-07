@@ -89,6 +89,210 @@ router.get('/view/:id', async (req, res) => {
   }
 });
 
+// Aggiungi attività alla commessa
+router.post('/add-activity/:id', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const workOrderId = req.params.id;
+    const { 
+      data_attivita, 
+      descrizione, 
+      ore_lavoro, 
+      costo_orario, 
+      totale_manodopera,
+      tipo_intervento,
+      note,
+      materiali,
+      km_percorsi,
+      costo_km,
+      pedaggi,
+      vitto,
+      alloggio,
+      totale_trasferta,
+      note_trasferta
+    } = req.body;
+
+    // Ottieni hospital_id dalla commessa
+    const workOrder = await client.query(
+      'SELECT hospital_id FROM work_orders WHERE id = $1',
+      [workOrderId]
+    );
+    const hospital_id = workOrder.rows[0].hospital_id;
+
+    // Inserisci attività
+    const activityResult = await client.query(`
+      INSERT INTO work_activities (
+        work_order_id, hospital_id, data_attivita, tecnico_id, descrizione,
+        ore_lavoro, costo_orario, totale_manodopera, tipo_intervento, note
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id
+    `, [
+      workOrderId, 
+      hospital_id, 
+      data_attivita, 
+      req.session.userId, 
+      descrizione,
+      ore_lavoro || 0, 
+      costo_orario || 0, 
+      totale_manodopera || 0, 
+      tipo_intervento, 
+      note
+    ]);
+
+    const activityId = activityResult.rows[0].id;
+
+    // Inserisci materiali (se presenti)
+    if (materiali) {
+      const materialiArray = Array.isArray(materiali) ? materiali : [materiali];
+      
+      for (const materiale of materialiArray) {
+        if (materiale.descrizione && materiale.descrizione.trim() !== '') {
+          await client.query(`
+            INSERT INTO work_materials (
+              activity_id, work_order_id, descrizione, quantita, prezzo_unitario, totale
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+          `, [
+            activityId,
+            workOrderId,
+            materiale.descrizione,
+            materiale.quantita || 1,
+            materiale.prezzo_unitario || 0,
+            materiale.totale || 0
+          ]);
+        }
+      }
+    }
+
+    // Inserisci trasferta (se presente)
+    if (km_percorsi || pedaggi || vitto || alloggio) {
+      const totale_km = (parseFloat(km_percorsi) || 0) * (parseFloat(costo_km) || 0);
+      const totale_trasferta_calc = totale_km + 
+                                    (parseFloat(pedaggi) || 0) + 
+                                    (parseFloat(vitto) || 0) + 
+                                    (parseFloat(alloggio) || 0);
+
+      await client.query(`
+        INSERT INTO work_travels (
+          activity_id, work_order_id, km_percorsi, costo_km, totale_km,
+          pedaggi, vitto, alloggio, totale_trasferta, note
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `, [
+        activityId,
+        workOrderId,
+        km_percorsi || 0,
+        costo_km || 0,
+        totale_km,
+        pedaggi || 0,
+        vitto || 0,
+        alloggio || 0,
+        totale_trasferta_calc,
+        note_trasferta
+      ]);
+    }
+
+    // Aggiorna totali commessa
+    const totalsResult = await client.query(`
+      SELECT 
+        COALESCE(SUM(wa.totale_manodopera), 0) as manodopera,
+        COALESCE((SELECT SUM(totale) FROM work_materials WHERE work_order_id = $1), 0) as materiali,
+        COALESCE((SELECT SUM(totale_trasferta) FROM work_travels WHERE work_order_id = $1), 0) as trasferte
+      FROM work_activities wa
+      WHERE wa.work_order_id = $1
+    `, [workOrderId]);
+
+    const totals = totalsResult.rows[0];
+    const totale_speso = parseFloat(totals.manodopera) + 
+                        parseFloat(totals.materiali) + 
+                        parseFloat(totals.trasferte);
+
+    const workOrderData = await client.query(
+      'SELECT budget_previsto FROM work_orders WHERE id = $1', 
+      [workOrderId]
+    );
+    const budget = parseFloat(workOrderData.rows[0].budget_previsto) || 0;
+    const scostamento = totale_speso - budget;
+
+    await client.query(`
+      UPDATE work_orders 
+      SET totale_speso = $1, scostamento = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+    `, [totale_speso, scostamento, workOrderId]);
+
+    await client.query('COMMIT');
+    res.redirect(`/work-orders/view/${workOrderId}`);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Errore aggiunta attività:', error);
+    res.status(500).send('Errore aggiunta attività');
+  } finally {
+    client.release();
+  }
+});
+
+// Elimina attività
+router.post('/delete-activity/:id', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // Ottieni work_order_id prima di eliminare
+    const activity = await client.query(
+      'SELECT work_order_id FROM work_activities WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (activity.rows.length === 0) {
+      return res.status(404).send('Attività non trovata');
+    }
+
+    const workOrderId = activity.rows[0].work_order_id;
+
+    // Elimina attività (materiali e trasferte si eliminano in cascata)
+    await client.query('DELETE FROM work_activities WHERE id = $1', [req.params.id]);
+
+    // Aggiorna totali commessa
+    const totalsResult = await client.query(`
+      SELECT 
+        COALESCE(SUM(wa.totale_manodopera), 0) as manodopera,
+        COALESCE((SELECT SUM(totale) FROM work_materials WHERE work_order_id = $1), 0) as materiali,
+        COALESCE((SELECT SUM(totale_trasferta) FROM work_travels WHERE work_order_id = $1), 0) as trasferte
+      FROM work_activities wa
+      WHERE wa.work_order_id = $1
+    `, [workOrderId]);
+
+    const totals = totalsResult.rows[0];
+    const totale_speso = parseFloat(totals.manodopera) + 
+                        parseFloat(totals.materiali) + 
+                        parseFloat(totals.trasferte);
+
+    const workOrderData = await client.query(
+      'SELECT budget_previsto FROM work_orders WHERE id = $1', 
+      [workOrderId]
+    );
+    const budget = parseFloat(workOrderData.rows[0].budget_previsto) || 0;
+    const scostamento = totale_speso - budget;
+
+    await client.query(`
+      UPDATE work_orders 
+      SET totale_speso = $1, scostamento = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+    `, [totale_speso, scostamento, workOrderId]);
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Errore eliminazione attività:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Cambia stato commessa
 router.post('/status/:id', async (req, res) => {
   const { stato } = req.body;
